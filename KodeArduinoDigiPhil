@@ -124,12 +124,6 @@ int melodystarwars[] = {
   NOTE_F5, NOTE_C6,
   NOTE_AS5, NOTE_A5, NOTE_G5, NOTE_F6, NOTE_C6,
 
-  NOTE_AS5, NOTE_A5, NOTE_G5, NOTE_F6, NOTE_C6,
-  NOTE_AS5, NOTE_A5, NOTE_AS5, NOTE_G5, NOTE_C5, NOTE_C5,
-  NOTE_D5, NOTE_D5, NOTE_AS5, NOTE_A5, NOTE_G5, NOTE_F5,
-  NOTE_F5, NOTE_G5, NOTE_A5, NOTE_G5, NOTE_D5, NOTE_E5, NOTE_C5, NOTE_C5,
-  NOTE_D5, NOTE_D5, NOTE_AS5, NOTE_A5, NOTE_G5, NOTE_F5,
-
   NOTE_C6, NOTE_G5, NOTE_G5, REST, NOTE_C5,
   NOTE_D5, NOTE_D5, NOTE_AS5, NOTE_A5, NOTE_G5, NOTE_F5,
   NOTE_F5, NOTE_G5, NOTE_A5, NOTE_G5, NOTE_D5, NOTE_E5, NOTE_C6, NOTE_C6,
@@ -145,12 +139,6 @@ int durationsstarwars[] = {
   8, 8, 8, 2, 8, 8, 8,
   2, 2,
   8, 8, 8, 2, 4,
-
-  8, 8, 8, 2, 4,
-  8, 8, 8, 2, 8, 16,
-  4, 8, 8, 8, 8, 8,
-  8, 8, 8, 4, 8, 4, 8, 16,
-  4, 8, 8, 8, 8, 8,
 
   8, 16, 2, 8, 8,
   4, 8, 8, 8, 8, 8,
@@ -547,7 +535,7 @@ void loop()
     	}
       EEPROM.write(6, angle);
       // flash LED and buzzer
-      flashLED(1,2000);    // flashLED(number of flashes, delay in milliseconds)
+      flashLED(2,2000);    // flashLED(number of flashes, delay in milliseconds)
     }
   }
   

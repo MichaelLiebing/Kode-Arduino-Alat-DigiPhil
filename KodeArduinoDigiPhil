@@ -13,12 +13,12 @@ LiquidCrystal_I2C lcd(0x27,  16, 2);
 Servo servo; 
 
 // Pin Variables
-const int servoPin = 7;
-const int ledPin = 6;
-const int buzzerPin = 5;
-const int TakeButtonPin = 2;
-const int SetButtonPin = 3;
-const int ManageButtonPin = 4;
+const int servoPin = 13;
+const int ledPin = 12;
+const int buzzerPin = 11;
+const int SetButtonPin = 8;
+const int TakeButtonPin = 9;
+const int ManageButtonPin = 10;
 
 // Variables
 int angle;
@@ -47,7 +47,19 @@ int intervalminutes;
 int intervalseconds;
 
 int dow;
-int waitingtime = 1000;
+int waitingtime = 500;
+
+int monthWith30Days[] = {4, 6, 9, 11};  // Bulan dengan 30 hari (April, Juni, September, November)
+int monthWith31Days[] = {1, 3, 5, 7, 8, 10, 12};  // Bulan dengan 31 hari (Januari, Maret, Mei, Juli, Agustus, Oktober, Desember)
+
+bool isInArray(int array[], int size, int value) {
+  for (int i = 0; i < size; i++) {
+    if (array[i] == value) {
+      return true;
+    }
+  }
+  return false;
+}
 
 int weekday(int year, int month, int day)
 /* Calculate day of week in proleptic Gregorian calendar. Sunday == 0. */
@@ -191,8 +203,21 @@ void setup(){
   lcd.print("is DigiPhil! :D");
   delay(2000);
   lcd.clear();
-  rtc.begin();
-  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  if (! rtc.begin()) {
+    Serial.println("Couldn't find RTC");
+    Serial.flush();
+    while (1) delay(10);
+  }
+
+  if (rtc.lostPower()) {
+    Serial.println("RTC lost power, let's set the time!");
+    // When time needs to be set on a new device, or after a power loss, the
+    // following line sets the RTC to the date & time this sketch was compiled
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    // This line sets the RTC with an explicit date & time, for example to set
+    // January 21, 2014 at 3am you would call:
+    // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
+  }
 }
 
 void loop()
@@ -205,30 +230,6 @@ void loop()
     intervalhour = EEPROM.read(3);
     intervalminutes = EEPROM.read(4);
     intervalseconds = EEPROM.read(5);
-    Serial.print("Alarm Set at: ");
-    Serial.print(sethour);
-    Serial.print(":");
-    if (setminutes<10){
-      Serial.print("0");
-    }
-    Serial.print(setminutes);
-    Serial.print(":");
-    if (setseconds<10){
-      Serial.print("0");
-    }
-    Serial.println(setseconds);
-    Serial.print("Interval Set at: ");
-    Serial.print(intervalhour);
-    Serial.print(":");
-    if (intervalminutes<10){
-      Serial.print("0");
-    }
-    Serial.print(intervalminutes);
-    Serial.print(":");
-    if (intervalseconds<10){
-      Serial.print("0");
-    }
-    Serial.println(intervalseconds);
   }
 
   // Penentuan ringtone
@@ -276,37 +277,278 @@ void loop()
     lcd.clear();
   }
 
+  if(digitalRead(SetButtonPin) && digitalRead(ManageButtonPin)){
+    lcd.clear();              
+    lcd.setCursor(0, 0);      
+    lcd.print("SET TIME TO");
+    lcd.setCursor(0, 1);
+    lcd.print("THE RIGHT TIME!");
+    delay(1000);
+    while (digitalRead(ManageButtonPin) == LOW){
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Set Year!");  
+      lcd.setCursor(0, 1);
+      lcd.print(year);
+      while (digitalRead(SetButtonPin) == LOW && digitalRead(TakeButtonPin) == LOW && digitalRead(ManageButtonPin) == LOW){}
+      if(digitalRead(SetButtonPin) == HIGH){
+        year++;
+      }
+      else if(digitalRead(TakeButtonPin) == HIGH){
+        year--;
+      }
+      delay(100);
+    }
+    delay(300);
+    while (digitalRead(ManageButtonPin) == LOW){
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Set Month!");  
+      lcd.setCursor(0, 1);
+      lcd.print(month);
+      if (month == 1){
+        lcd.print(" = January");
+      }
+      else if (month == 2){
+        lcd.print(" = February");
+      }
+      else if (month == 3){
+        lcd.print(" = March");
+      }
+      else if (month == 4){
+        lcd.print(" = April");
+      }
+      else if (month == 5){
+        lcd.print(" = May");
+      }
+      else if (month == 6){
+        lcd.print(" = June");
+      }
+      else if (month == 7){
+        lcd.print(" = July");
+      }
+      else if (month == 8){
+        lcd.print(" = August");
+      }
+      else if (month == 9){
+        lcd.print(" = September");
+      }
+      else if (month == 10){
+        lcd.print(" = October");
+      }
+      else if (month == 11){
+        lcd.print(" = November");
+      }
+      else if (month == 12){
+        lcd.print(" = December");
+      }
+      while (digitalRead(SetButtonPin) == LOW && digitalRead(TakeButtonPin) == LOW && digitalRead(ManageButtonPin) == LOW){}
+      if(digitalRead(SetButtonPin) == HIGH){
+        month++;
+      }
+      else if(digitalRead(TakeButtonPin) == HIGH){
+        month--;
+      }
+      if(month<1){
+        month = 12;
+      }
+      if(month>12){
+        month = 1;
+      }
+      delay(100);
+    }
+    delay(300);
+    while (digitalRead(ManageButtonPin) == LOW){
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Set Date!");  
+      lcd.setCursor(0, 1);
+      lcd.print(day);
+      switch(dow=weekday(year, month, day)){
+        case 1:
+        lcd.print(" = Monday");
+        break;
+        case 2:
+        lcd.print(" = Tuesday");
+        break;
+        case 3:
+        lcd.print(" = Wednesday");
+        break;
+        case 4:
+        lcd.print(" = Thursday");
+        break;
+        case 5:
+        lcd.print(" = Friday");
+        break;
+        case 6:
+        lcd.print(" = Saturday");
+        break;
+        case 0:
+        lcd.print(" = Sunday");
+        
+        break;}
+      while (digitalRead(SetButtonPin) == LOW && digitalRead(TakeButtonPin) == LOW && digitalRead(ManageButtonPin) == LOW){}
+      if(digitalRead(SetButtonPin) == HIGH){
+        day++;
+      }
+      else if(digitalRead(TakeButtonPin) == HIGH){
+        day--;
+      }
+      if (isInArray(monthWith30Days, 4, month)) {
+        if(day > 30){
+        day = 1;
+        }
+        else if(day < 1){
+          day = 30;
+        }
+      } else if (isInArray(monthWith31Days, 7, month)) {
+        if(day > 31){
+        day = 1;
+        }
+        else if(day < 1){
+          day = 31;
+        }
+      } else {
+        if(day > 28){
+        day = 1;
+        }
+        else if(day < 1){
+          day = 28;
+        }
+      }
+      delay(100);
+    }
+    delay(300);
+    while (digitalRead(ManageButtonPin) == LOW){
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Set Hour!");  
+      lcd.setCursor(0, 1);
+      lcd.print(hour);
+      lcd.print(":");
+
+      if(minutes<10){
+        lcd.print("0");
+      }
+      lcd.print(minutes);
+      lcd.print(":");
+      if(seconds<10){
+        lcd.print("0");
+      }
+      lcd.print(seconds);
+      while (digitalRead(SetButtonPin) == LOW && digitalRead(TakeButtonPin) == LOW && digitalRead(ManageButtonPin) == LOW){}
+      if(digitalRead(SetButtonPin) == HIGH){
+        hour++;
+      }
+      else if(digitalRead(TakeButtonPin) == HIGH){
+        hour--;
+      }
+      if(sethour>=24){
+        hour = 0;
+      }
+      if(sethour<0){
+        hour = 23;
+      }
+      delay(100);
+    }
+    delay(300);
+    while (digitalRead(ManageButtonPin) == LOW){
+      lcd.clear();              
+      lcd.setCursor(0, 0);     
+      lcd.print("Set Minutes!");  
+      lcd.setCursor(0, 1);
+      lcd.print(hour);
+      lcd.print(":");
+
+      if(minutes<10){
+        lcd.print("0");
+      }
+      lcd.print(minutes);
+      lcd.print(":");
+
+      if(seconds<10){
+        lcd.print("0");
+      }
+      lcd.print(seconds);
+      while (digitalRead(SetButtonPin) == LOW && digitalRead(TakeButtonPin) == LOW && digitalRead(ManageButtonPin) == LOW){}
+      if(digitalRead(SetButtonPin) == HIGH){
+        minutes++;
+      }
+      else if(digitalRead(TakeButtonPin) == HIGH){
+        minutes--;
+      }
+      if(minutes>=60){
+        minutes = 0;
+      }
+      if(minutes<0){
+        minutes = 59;
+      }
+      delay(100);
+    }
+    delay(300);
+    while (digitalRead(ManageButtonPin) == LOW){
+      lcd.clear();              
+      lcd.setCursor(0, 0);      
+      lcd.print("Set Seconds!");  
+      lcd.setCursor(0, 1);
+      lcd.print(hour);
+      lcd.print(":");
+
+      if(minutes<10){
+        lcd.print("0");
+      }
+      lcd.print(minutes);
+      lcd.print(":");
+
+      if(seconds<10){
+        lcd.print("0");
+      }
+      lcd.print(seconds);
+      while (digitalRead(SetButtonPin) == LOW && digitalRead(TakeButtonPin) == LOW && digitalRead(ManageButtonPin) == LOW){}
+      if(digitalRead(SetButtonPin) == HIGH){
+        seconds++;
+      }
+      else if(digitalRead(TakeButtonPin) == HIGH){
+        seconds--;
+      }
+      if(seconds>=60){
+        seconds = 0;
+      }
+      if(seconds<0){
+        seconds = 59;
+      }
+      delay(100);
+    }
+    // Atur waktu menjadi yang telah disetting
+    rtc.adjust(DateTime(year, month, day, hour, minutes, seconds));
+    delay(300);
+    lcd.clear();
+  }  
+
   // Penentuan waktu berputar
   if(digitalRead(SetButtonPin)){
     lcd.clear();              
     lcd.setCursor(0, 0);      
     lcd.print("SET ALARM TIME!");
-    Serial.println("SET ALARM TIME!");
     delay(1000);
     while (digitalRead(ManageButtonPin) == LOW){
       lcd.clear();
       lcd.setCursor(0, 0);
       lcd.print("Set Hour!");  
-      Serial.println("Set Hour!");
       lcd.setCursor(0, 1);
       lcd.print(sethour);
-      Serial.print(sethour);
       lcd.print(":");
-      Serial.print(":");
+
       if(setminutes<10){
         lcd.print("0");
-        Serial.print("0");
       }
       lcd.print(setminutes);
-      Serial.print(setminutes);
       lcd.print(":");
-      Serial.print(":");
+
       if(setseconds<10){
         lcd.print("0");
-        Serial.print("0");
       }
       lcd.print(setseconds);
-      Serial.println(setseconds);
       while (digitalRead(SetButtonPin) == LOW && digitalRead(TakeButtonPin) == LOW && digitalRead(ManageButtonPin) == LOW){}
       if(digitalRead(SetButtonPin) == HIGH){
         sethour++;
@@ -327,26 +569,20 @@ void loop()
       lcd.clear();              
       lcd.setCursor(0, 0);     
       lcd.print("Set Minutes!");  
-      Serial.println("Set Minutes!");
       lcd.setCursor(0, 1);
       lcd.print(sethour);
-      Serial.print(sethour);
       lcd.print(":");
-      Serial.print(":");
+
       if(setminutes<10){
         lcd.print("0");
-        Serial.print("0");
       }
       lcd.print(setminutes);
-      Serial.print(setminutes);
       lcd.print(":");
-      Serial.print(":");
+
       if(setseconds<10){
         lcd.print("0");
-        Serial.print("0");
       }
       lcd.print(setseconds);
-      Serial.print(setseconds);
       while (digitalRead(SetButtonPin) == LOW && digitalRead(TakeButtonPin) == LOW && digitalRead(ManageButtonPin) == LOW){}
       if(digitalRead(SetButtonPin) == HIGH){
         setminutes++;
@@ -367,26 +603,20 @@ void loop()
       lcd.clear();              
       lcd.setCursor(0, 0);      
       lcd.print("Set Seconds!");  
-      Serial.println("Set Seconds!");
       lcd.setCursor(0, 1);
       lcd.print(sethour);
-      Serial.print(sethour);
       lcd.print(":");
-      Serial.print(":");
+
       if(setminutes<10){
         lcd.print("0");
-        Serial.print("0");
       }
       lcd.print(setminutes);
-      Serial.print(setminutes);
       lcd.print(":");
-      Serial.print(":");
+
       if(setseconds<10){
         lcd.print("0");
-        Serial.print("0");
       }
       lcd.print(setseconds);
-      Serial.println(setseconds);
       while (digitalRead(SetButtonPin) == LOW && digitalRead(TakeButtonPin) == LOW && digitalRead(ManageButtonPin) == LOW){}
       if(digitalRead(SetButtonPin) == HIGH){
         setseconds++;
@@ -407,26 +637,20 @@ void loop()
       lcd.clear();              
       lcd.setCursor(0, 0);      
       lcd.print("Hour Interval!");  
-      Serial.println("Hour Interval!");
       lcd.setCursor(0, 1);
       lcd.print(intervalhour);
-      Serial.print(intervalhour);
       lcd.print(":");
-      Serial.print(":");
+
       if(intervalminutes<10){
         lcd.print("0");
-        Serial.print("0");
       }
       lcd.print(intervalminutes);
-      Serial.print(intervalminutes);
       lcd.print(":");
-      Serial.print(":");
+
       if(intervalseconds<10){
         lcd.print("0");
-        Serial.print("0");
       }
       lcd.print(intervalseconds);
-      Serial.println(intervalseconds);
       while (digitalRead(SetButtonPin) == LOW && digitalRead(TakeButtonPin) == LOW && digitalRead(ManageButtonPin) == LOW){}
       if(digitalRead(SetButtonPin) == HIGH){
         intervalhour++;
@@ -447,23 +671,18 @@ void loop()
       lcd.clear();              
       lcd.setCursor(0, 0);      
       lcd.print("Minutes Interval!");  
-      Serial.println("Minutes Interval!");
       lcd.setCursor(0, 1);
       lcd.print(intervalhour);
-      Serial.print(intervalhour);
       lcd.print(":");
-      Serial.print(":");
+
       if(intervalminutes<10){
         lcd.print("0");
-        Serial.print("0");
       }
       lcd.print(intervalminutes);
-      Serial.print(intervalminutes);
       lcd.print(":");
-      Serial.print(":");
+
       if(intervalseconds<10){
         lcd.print("0");
-        Serial.print("0");
       }
       lcd.print(intervalseconds);
       while (digitalRead(SetButtonPin) == LOW && digitalRead(TakeButtonPin) == LOW && digitalRead(ManageButtonPin) == LOW){}
@@ -486,26 +705,20 @@ void loop()
       lcd.clear();              
       lcd.setCursor(0, 0);      
       lcd.print("Seconds Interval!");  
-      Serial.print("Seconds Interval!");
       lcd.setCursor(0, 1);
       lcd.print(intervalhour);
-      Serial.print(intervalhour);
       lcd.print(":");
-      Serial.print(":");
+
       if(intervalminutes<10){
         lcd.print("0");
-        Serial.print("0");
       }
       lcd.print(intervalminutes);
-      Serial.print(intervalminutes);
       lcd.print(":");
-      Serial.print(":");
+
       if(intervalseconds<10){
         lcd.print("0");
-        Serial.print("0");
       }
       lcd.print(intervalseconds);
-      Serial.println(intervalseconds);
       while (digitalRead(SetButtonPin) == LOW && digitalRead(TakeButtonPin) == LOW && digitalRead(ManageButtonPin) == LOW){}
       if(digitalRead(SetButtonPin) == HIGH){
         intervalseconds++;
@@ -537,8 +750,6 @@ void loop()
     	while(angle < newAngle){    // increase angle until it reaches the new angle
       	angle = angle + 1;        // increase angle by 1
       	servo.write(angle);       // move the servo
-        Serial.print("Servo Angle: ");
-        Serial.println(angle);    // print the angle
       	delay(movementDelay);     // delay to slow down moement
     	}
       EEPROM.write(6, angle);
@@ -589,8 +800,6 @@ void loop()
           while(angle < newAngle){    // increase angle until it reaches the new angle
             angle = angle + 1;        // increase angle by 1
             servo.write(angle);       // move the servo
-            Serial.print("Servo Angle: ");
-            Serial.println(angle);    // print the angle
             delay(movementDelay);     // delay to slow down movement
           }
         }
@@ -610,8 +819,6 @@ void loop()
           while(angle > newAngle){    // increase angle until it reaches the new angle
             angle = angle - 1;        // increase angle by 1
             servo.write(angle);       // move the servo
-            Serial.print("Servo Angle: ");
-            Serial.println(angle);    // print the angle
             delay(movementDelay);     // delay to slow down movement
           }
         }
@@ -641,8 +848,6 @@ void loop()
       while(angle>0){         // decrease angle until it reaches 0
         angle = angle - 1;    // decrease angle by 1
         servo.write(angle);   // move the servo
-        Serial.print("Servo Angle: ");
-        Serial.println(angle);// print the angle
         delay(movementDelay); // delay to slow down movement
       }
     EEPROM.write(6, angle);
@@ -654,7 +859,6 @@ void flashLED(int numFlashes, int flashDelay){  // alarm function to flash LED a
   lcd.clear();              
   lcd.setCursor(0, 0);      
   lcd.print("Take Medicine!");  
-  Serial.println("Take Medicine!");
   for (int i = 0; i<numFlashes; i++){  // loop to flash LED/buzzer numFlashes times
     digitalWrite(ledPin,HIGH);         // turn LED on
     if (ringtone==0){
@@ -757,18 +961,7 @@ void flashLED(int numFlashes, int flashDelay){  // alarm function to flash LED a
   hour = now.hour();
   minutes = now.minute();
   seconds = now.second();
-  seconds = seconds + 11;
-  if (seconds>=60){
-    seconds = seconds % 60;
-    minutes++;
-  }
-  if (minutes>=60){
-    minutes = minutes % 60;
-    hour++;
-  }
-  if(hour>=24){
-    hour = hour % 24;
-  }
+
   setseconds = seconds + intervalseconds;
   if (setseconds>=60){
     setseconds = setseconds % 60;
@@ -803,19 +996,6 @@ void updateLCD(){    // function to update LCD screen
   minutes = now.minute();
   seconds = now.second();
 
-  seconds = seconds + 11;
-  if (seconds>=60){
-    seconds = seconds % 60;
-    minutes++;
-  }
-  if (minutes>=60){
-    minutes = minutes % 60;
-    hour++;
-  }
-  if(hour>=24){
-    hour = hour % 24;
-  }
-
   // set the cursor to column 0, line 1
   // (note: line 1 is the second row, since counting begins with 0):
   lcd.setCursor(0, 0);
@@ -847,49 +1027,36 @@ void updateLCD(){    // function to update LCD screen
      break;}
      
   lcd.print(" ");
-  if(month<10){
-    lcd.print(" ");
-    Serial.print(" ");
-  }
-  lcd.print(month);
-  Serial.print(month);
-  lcd.print("/");
-  Serial.print("/");
-  
+
   if(day<10){
     lcd.print(" ");
-    Serial.print(" ");
   }
   lcd.print(day);
-  Serial.print(day);
   lcd.print("/");
-  Serial.print("/");
+
+  if(month<10){
+    lcd.print(" ");
+  }
+  lcd.print(month);
+  lcd.print("/");
+ 
   lcd.print(year);
-  Serial.println(year);
 
   // print time in hh:mm:ss format
   // add leading zeroes if minutes or seconds are less than ten to keep spacing consistent
   lcd.setCursor(0, 1);
   if(hour<10){
     lcd.print(" ");
-    Serial.print(" ");
   }
   lcd.print(hour);
-  Serial.print(hour);
   lcd.print(":");
-  Serial.print(":");
   if(minutes<10){
     lcd.print("0");
-    Serial.print("0");
   }
   lcd.print(minutes);
-  Serial.print(minutes);
   lcd.print(":");
-  Serial.print(":");
   if(seconds<10){
     lcd.print("0");
-    Serial.print("0");
   }
   lcd.print(seconds);
-  Serial.println(seconds);
 }

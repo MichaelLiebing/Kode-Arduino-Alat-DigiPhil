@@ -47,7 +47,7 @@ int intervalminutes;
 int intervalseconds;
 
 int dow;
-int waitingtime = 500;
+int waitingtime = 50;
 
 int monthWith30Days[] = {4, 6, 9, 11};  // Bulan dengan 30 hari (April, Juni, September, November)
 int monthWith31Days[] = {1, 3, 5, 7, 8, 10, 12};  // Bulan dengan 31 hari (Januari, Maret, Mei, Juli, Agustus, Oktober, Desember)
@@ -910,7 +910,7 @@ void flashLED(int numFlashes, int flashDelay){  // alarm function to flash LED a
   while(digitalRead(TakeButtonPin) == LOW){
     i++;
     delay(waitingtime);
-    if(i==300){
+    if(i==3000){
       if (ringtone==0){
         int size = sizeof(durationschristmas) / sizeof(int);
         for (int note = 0; note < size; note++) {
